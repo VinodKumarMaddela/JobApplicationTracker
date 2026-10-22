@@ -161,3 +161,16 @@ JobApplicationTracker/
 ## Project Goal
 
 This project demonstrates practical skills in Django web development, relational database integration, user authentication, CRUD operations, REST API development, search and filtering, and automated testing.
+
+
+## 📸 Screenshots
+
+### Dashboard
+![Job Application Tracker Dashboard](screenshots/dashboard.png)
+
+### Login Page
+![Login Page](screenshots/login.png)
+
+### Registration Page
+![Registration Page](screenshots/register.png)
+
