@@ -37,11 +37,20 @@
 </head>
 <body>
 
+
 <nav class="navbar navbar-dark px-4 py-3">
     <span class="navbar-brand fw-bold">
         Job Application Tracker Pro
     </span>
+
+    <form method="post" action="{% url 'logout' %}" class="ms-auto">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-light">
+            Logout
+        </button>
+    </form>
 </nav>
+
 
 <main class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">

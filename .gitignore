@@ -24,3 +24,9 @@ db.sqlite3
 .idea/
 .DS_Store
 Thumbs.db
+
+# Database backups - keep private
+backup_before_user_registration.sql
+*.sql.bak
+# Temporary code backup files
+*.bak

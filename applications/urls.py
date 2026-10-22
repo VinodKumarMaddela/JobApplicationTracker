@@ -28,5 +28,5 @@ urlpatterns = [
         views.JobApplicationDetailAPIView.as_view(),
         name="api_application_detail",
     ),
-
+    path("accounts/register/", views.register, name="register"),
 ]

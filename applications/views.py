@@ -1,17 +1,23 @@
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db import models
+from django.shortcuts import render, redirect, get_object_or_404
 
 from rest_framework import generics
-from .serializers import JobApplicationSerializer
+from rest_framework.permissions import IsAuthenticated
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.db import models
 from .models import JobApplication
 from .forms import JobApplicationForm
+from .serializers import JobApplicationSerializer
 
 
+@login_required
 def dashboard(request):
-    applications = JobApplication.objects.all()
+    # Show only applications belonging to the logged-in user.
+    all_applications = JobApplication.objects.filter(owner=request.user)
+    applications = all_applications
 
-    # Search by company, job title, or location
     search_query = request.GET.get("search", "").strip()
     if search_query:
         applications = applications.filter(
@@ -20,7 +26,6 @@ def dashboard(request):
             | models.Q(location__icontains=search_query)
         )
 
-    # Filter by application status
     selected_status = request.GET.get("status", "").strip()
     valid_statuses = dict(JobApplication.STATUS_CHOICES)
 
@@ -28,9 +33,6 @@ def dashboard(request):
         applications = applications.filter(status=selected_status)
     else:
         selected_status = ""
-
-    # Dashboard statistics always show all applications
-    all_applications = JobApplication.objects.all()
 
     context = {
         "applications": applications,
@@ -48,12 +50,15 @@ def dashboard(request):
     return render(request, "applications/dashboard.html", context)
 
 
+@login_required
 def add_application(request):
     if request.method == "POST":
         form = JobApplicationForm(request.POST)
 
         if form.is_valid():
-            form.save()
+            application = form.save(commit=False)
+            application.owner = request.user
+            application.save()
             return redirect("dashboard")
     else:
         form = JobApplicationForm()
@@ -65,9 +70,13 @@ def add_application(request):
     )
 
 
-
+@login_required
 def edit_application(request, pk):
-    application = get_object_or_404(JobApplication, pk=pk)
+    application = get_object_or_404(
+        JobApplication,
+        pk=pk,
+        owner=request.user,
+    )
 
     if request.method == "POST":
         form = JobApplicationForm(request.POST, instance=application)
@@ -81,28 +90,17 @@ def edit_application(request, pk):
     return render(
         request,
         "applications/application_form.html",
-        {
-            "form": form,
-            "is_edit": True,
-        },
+        {"form": form, "is_edit": True},
     )
 
 
+@login_required
 def delete_application(request, pk):
-    application = get_object_or_404(JobApplication, pk=pk)
-
-    if request.method == "POST":
-        application.delete()
-        return redirect("dashboard")
-
-    return render(
-        request,
-        "applications/confirm_delete.html",
-        {"application": application},
+    application = get_object_or_404(
+        JobApplication,
+        pk=pk,
+        owner=request.user,
     )
-
-def delete_application(request, pk):
-    application = get_object_or_404(JobApplication, pk=pk)
 
     if request.method == "POST":
         application.delete()
@@ -116,9 +114,41 @@ def delete_application(request, pk):
 
 
 class JobApplicationListCreateAPIView(generics.ListCreateAPIView):
-    queryset = JobApplication.objects.all()
     serializer_class = JobApplicationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return JobApplication.objects.filter(owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
 
 class JobApplicationDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = JobApplication.objects.all()
     serializer_class = JobApplicationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return JobApplication.objects.filter(owner=self.request.user)
+
+def register(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                "Your account has been created successfully. Please sign in."
+            )
+            return redirect("login")
+    else:
+        form = UserCreationForm()
+
+    return render(
+        request,
+        "registration/register.html",
+        {"form": form},
+    )
