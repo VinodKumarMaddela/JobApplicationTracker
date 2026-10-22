@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Application Tracker Pro</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f7fb;
+            font-family: Arial, sans-serif;
+        }
+
+        .navbar {
+            background: #172554;
+        }
+
+        .stat-card {
+            border: none;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .dashboard-title {
+            color: #172554;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark px-4 py-3">
+    <span class="navbar-brand fw-bold">
+        Job Application Tracker Pro
+    </span>
+</nav>
+
+<main class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="dashboard-title fw-bold">Dashboard</h1>
+            <p class="text-secondary">
+                Track your job search in one place.
+            </p>
+        </div>
+
+        <a href="/applications/add/"
+           class="btn btn-primary">
+            + Add Application
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card stat-card p-4">
+                <p class="text-secondary mb-1">Total Applications</p>
+                <div class="stat-number">{{ total_applications }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card stat-card p-4">
+                <p class="text-secondary mb-1">Applied</p>
+                <div class="stat-number">{{ applied_count }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card stat-card p-4">
+                <p class="text-secondary mb-1">Interviews</p>
+                <div class="stat-number">{{ interview_count }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card stat-card p-4">
+                <p class="text-secondary mb-1">Offers</p>
+                <div class="stat-number">{{ offer_count }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card stat-card p-4">
+                <p class="text-secondary mb-1">Rejected</p>
+                <div class="stat-number">{{ rejected_count }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card stat-card p-4">
+                <p class="text-secondary mb-1">Assessments</p>
+                <div class="stat-number">{{ assessment_count }}</div>
+            </div>
+        </div>
+    </div>
+</main>
+<div class="container mt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>My Job Applications</h3>
+        
+<form method="get" class="row g-2 mb-4">
+    <div class="col-md-6">
+        <input
+            type="text"
+            name="search"
+            class="form-control"
+            placeholder="Search company, job title, or location..."
+            value="{{ search_query }}"
+        >
+    </div>
+
+    <div class="col-md-3">
+        <select name="status" class="form-select">
+            <option value="">All Statuses</option>
+            {% for code, label in status_choices %}
+                <option value="{{ code }}"
+                    {% if selected_status == code %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            Search / Filter
+        </button>
+        <a href="/" class="btn btn-outline-secondary">
+            Reset
+        </a>
+    </div>
+</form>
+
+        <a href="/applications/add/"
+           class="btn btn-primary">
+            + Add Application
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Company</th>
+                    <th>Job Title</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Applied Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for application in applications %}
+                <tr>
+                    <td>{{ application.company_name }}</td>
+                    <td>
+                        {% if application.job_url %}
+                            <a href="{{ application.job_url }}"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                {{ application.job_title }}
+                            </a>
+                        {% else %}
+                            {{ application.job_title }}
+                        {% endif %}
+                    </td>
+                    <td>{{ application.location|default:"Not specified" }}</td>
+                    <td>
+                        <span class="badge bg-primary">
+                            {{ application.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ application.applied_date|date:"d M Y" }}</td>
+                    <td>
+    
+<a href="{% url 'edit_application' application.id %}"
+   class="btn btn-sm btn-warning">
+    Edit
+</a>
+
+
+    <a href="/admin/applications/jobapplication/{{ application.id }}/delete/"
+       class="btn btn-sm btn-danger">
+        Delete
+    </a>
+</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4">
+                        No job applications yet. Add your first application!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
